@@ -1,0 +1,391 @@
+#+TITLE: Lua Notes
+
+* LUA基本语法
+** 全局变量不需要声明
+=b = nil=
+删除一个全局变量 
+=print(b) --> nil=
+
+** 退出LUA的方法
+=Ctrl-D= (linux) =Ctrl-Z= (DOS/Windows) 调用OS库的函数 =os.exit()=
+
+** 执行lua的chunk方法
+执行一系列：lua -l<filename> -l<filename>
+在交互模式下调用dofile函数 >dofile("<filename>")
+
+** 注释
+注意：Lua是大小写敏感的.
+注释：单行注释:--
+多行注释：--[[
+          --]]
+
+** 条件判断
+在控制结构的条件中除了false和nil为假，其他值都为真。所以Lua认为0和空串都是真。
+
+对于Table，Function和Userdata类型的数据，只有 == 和 ~=可以用。相等表示两个变量
+引用的是同一个数据。比如：
+#+BEGIN_SRC lua
+  a={1,2}
+  b=a
+  print(a==b, a~=b) -- true, false
+  a={1,2}
+  b={1,2}
+  print(a==b, a~=b) -- false, true
+#+END_SRC
+
+** 连接运算符
+=print(10 .. 12) --> 1012=
+
+** 逻辑运算符
+逻辑运算符认为false和nil是假（false），其他为真，0也是true.
+and的优先级比or高。
+=a and b -- 如果a为false，则返回a，否则返回b=
+=a or b -- 如果a为true，则返回a，否则返回b=
+如果x为false或者nil则给x赋初始值v
+=x = x or v=
+C语言中的三元运算符
+=a ? b : c=
+=(a and b) or c=
+
+** 引用表中成员
+#+BEGIN_SRC lua
+  w = {x=0, y=0, label="console"}
+  print(w.x) --> 0
+  print(w["x"]) --> 
+#+END_SRC
+
+** 迭代器
+#+BEGIN_SRC lua
+  function list_iter (t)
+     local i = 0
+     local n = table.getn(t)
+     return function ()
+        i = i + 1
+        if i <= n then return t[i] end
+            end
+  end
+  
+  t = {10, 20, 30}
+  for element in list_iter(t) do
+     print(element)
+  end
+#+END_SRC
+
+** for循环
+*** 第一种：数值循环
+for var=exp1,exp2,exp3 do
+loop-part
+end
+for将用exp3作为step从exp1（初始值）到exp2（终止值），执行loop-part。
+其中exp3可以省略，默认step=1
+
+*** 第二种：范性for
+for <var-list> in <exp-list> do
+<body>
+end
+<var-list>是一个或多个以逗号分割的变量名列表，<exp-list>是一个或多
+个以逗号分割的表达式列表，通常情况下exp-list只有一个值：迭代工厂的调用。
+变量列表中第一个变量为控制变量，其值为nil时循环结束。
+表达式应该返回范性for需要的三个值：迭代函数，状态常量和控制变量；
+表达式返回的结果个数不足三个会自动用nil补足，多出部分会被忽略；
+将状态常量和控制变量作为参数调用迭代函数；
+迭代函数返回的值赋给变量列表。
+
+** 错误处理
+error函数抛出异常
+assert调用抛出异常
+pcall函数调用
+
+** 协同程序
+coroutine.create(<协同程序名，一般为匿名函数>)
+coroutine.resume(<create返回的协同程序名>,[传给协同程序的参数列表])
+resume函数的返回值除了true或false以外，还有yield的所有参数
+
+** __le和__lt __eq
+一般实现__le后，还要实现__lt 和__eq
+#+BEGIN_SRC lua
+  Set.mt.__lt = function (a,b)
+     return a <= b and not (b <= a)
+  end
+  Set.mt.__eq = function (a,b)
+     return a <= b and b <= a
+  end
+#+END_SRC
+
+** 有默认值的表实现(所有表共享同一个metatable)
+#+BEGIN_SRC lua
+  local key = {} -- unique key
+  local mt = {__index = function(t) return t[key] end}
+  function setDefault (t, d)
+     t[key] = d
+     setmetatable(t, mt)
+  end
+  -->上面的写法，每一个表占用一个空间存储默认值d
+  tab = {x=10, y=20}
+  print(tab.x, tab.z) --> 10 nil
+  setDefault(tab, 0)
+  print(tab.x, tab.z) --> 10 0
+#+END_SRC
+
+** 只读的表实现
+每一个只读代理有一个单独的新的metatable，使用__index指向原始表
+
+** 监控表的实现
+设置一个空表，这样就会总能触发__index和__newindex
+
+** LUA全局变量
+枚举所有全局变量
+=for n in pairs(_G) do print(n) end=
+打印制定全局变量，例如：
+=print(_G["loadfile"])=
+
+** __index metamethod P108
+__index metamethod不需要非是一个函数，他也可以是一个表。
+但它是一个函数的时候，Lua将table和缺少的域作为参数调用这个函数；
+当他是一个表的时候，Lua将在这个表中看是否有缺少的域。
+** 包 module
+module 指令运行完后，整个环境被压栈，所以前面全局的东西再看不见了。
+local print=print
+module("test")
+print(...)
+或者
+local _G=_G
+module("test")
+_G.print(...)
+或者
+module("test",package.seeall)
+print(...)
+
+** C API
+#define lua_open() luaL_newstate()
+lua_State *L = lua_open();
+lua_open();
+luaL_newstate();
+luaL_openlibs();
+luaopen_base(L);
+luaopen_table(L);
+luaopen_io(L);
+luaopen_string(L);
+luaopen_math(L);
+
+空值（nil）用lua_pushnil
+数值型（double）用lua_pushnumber
+布尔型（在C中用整数表示）用lua_pushboolean
+任意的字符串（char*类型，允许包含'\0'字符）用lua_pushlstring
+C语言风格（以'\0'结束）的字符串（const char*）用lua_pushstring
+lua_tostring(L, -1) 以字符串的形式返回栈顶的值
+API提供了一套lua_is*函数来检查一个元素是否是一个指定的类型
+lua_getglobal(L, <global name>) 获得lua文件中的变量并压入栈中
+<global name>一般为module名或者table名
+
+lua_gettable(L, <table在堆栈中的索引>)
+用lua_gettable取出table中的元素并压入栈中。
+例如：
+lua_getglobal(L, "background"); //将表压栈
+lua_pushstring(L, "red") //首先将key压栈
+lua_gettable(L, -2); --> get background["red"]
+
+一种简便的方法如下：直接使用lua_getfield
+lua_getfield(L, <global index>, <field name>)
+<global index>为<field name>相对应的global索引,global可能是上次
+
+lua_pop(L, <弹出栈元素个数>)
+
+在调用脚本之前可以在C语言中设置global变量或者table对象
+然后在脚本中就可以执行C语言中设置的变量或对象了。
+lua_pushstring
+lua_newtable(L)
+lua_setfield(L, <table index>, <field name>) //栈顶必须是要设置的<field value>
+lua_setglobal(L, <要设置的全局名称>) //栈顶必须有要设置的元素
+例如：
+lua_pushnumber(L, ct1.red/MAX_COLOR);
+lua_setfield(L, -2, "r");
+lua_pushnumber(L, ct1.green/MAX_COLOR);
+lua_setfield(L, -2, "g");
+lua_setglobal(L, "RED");
+LUA调用C文件中的函数方法：
+需要注册函数
+lua_pushcfunction(l, l_sin);
+lua_setglobal(l, "mysin");
+
+C调用LUA文件中的函数方法：
+lua_getglobal(L, <function name>)
+lua_push*() //例如lua_pushnumber(L, x)
+lua_pcall(L, <arguments nums>, <return nums>, <错误处理函数地址>)
+例如lua_pcall(L, 2, 1, 0)
+//获得返回值
+lua_to*() //例如lua_tonumber(L, -1);
+lua_pop(L,1)
+
+C作为库文件被Lua调用，C文件统一接口函数
+luaopen_<dll name>, <dll name>必须和dll保持一致
+例如：
+#+BEGIN_SRC c
+  #define _EXPORT extern "C" __declspec(dllexport)
+  _EXPORT int luaopen_capi_mytestlib(lua_State *L)
+  {
+    struct luaL_reg driver[] = {
+      {"average", average1},
+      {NULL, NULL},};
+    luaL_register(L, "mylib", driver);
+    //luaL_openlib(L, "mylib", driver, 0);
+    return 1;
+  }
+#+END_SRC
+li情况
+按照网上所说，LUA加载C动态库搞了一把，终于在LINUX下搞通了,白白浪费许多时间。
+总结几条：
+1.动态库要供LUA调用的function,其定义要符合：
+typedef int function(lua_State *L)
+这个一般大家都知道
+
+2.在动态库调用LUA注册：
+将要调用的函数放到这个结构体里：
+struct luaL_Reg lib[] =
+｛｝
+在动态库的入口函数里调用luaL_register将这个结构体注册
+
+3.入口函数定义很重要,一定是要定义成:
+int luaopen_XXX(lua_State *L)
+否则就提示找不到动态库，
+汗
+
+在这个入口函数注册结构体时，要注册成：
+luaL_register(L,"XXX",lib);
+与入口函数的luaopen_XXX的XXX要一致。
+
+4.在写脚本的时候,使用require("XXX"),就是入口函数的luaopen_后面的XXX，注意大小写敏感
+
+5.编译生成的动态库命令成XXX.so,对，同入口函数的luaopen_后面的XXX一致
+
+SAMPLE：
+
+C文件如下:
+#+BEGIN_SRC c
+  #include <stdio.h>
+  #include "lua/lua.h"
+  #include "lua/lualib.h"
+  #include "lua/lauxlib.h"
+  static int add(lua_State *L)
+  {
+    int a,b,c;
+    a = lua_tonumber(L,1);
+    b = lua_tonumber(L,2);
+    c = a+b;
+    lua_pushnumber(L,c);
+    printf("test hello!!!\r\n");
+    return 1;
+  }
+  static const struct luaL_Reg lib[] =
+    {
+      {"testadd",add},
+      {NULL,NULL}
+    };
+  int luaopen_testlib(lua_State *L)
+  {
+    luaL_register(L,"testlib",lib);
+    return 1;
+  }
+#+END_SRC
+
+编译: gcc test.c -fPIC -shared -o testlib.so
+
+脚本编写:
+#+BEGIN_SRC lua
+  require("testlib")
+  c = testlib.testadd(15,25)
+  print("The result is ",c);
+#+END_SRC
+
+** 字符串面值
+
+** 面向对象
+1) 对象 类
+setmetatable(a, {__index = b})
+a相当于对象，b相当于类；对象a调用任何不存在的成员都会到对象b中查找
+一个类的简单实现：
+#+BEGIN_SRC lua
+  local _G = _G;
+  module "packparse"
+  function New(self,o)
+     _G.setmetatable(o,self);
+     self.__index = self;
+     return o;
+  end
+#+END_SRC
+
+导入C++中对象到lua中
+
+** userdata用途
+在Lua中自定义类型，该类型由C函数操作。Lua为这种情况提供专门提供一个基本的类型：
+userdata。一个userdatum提供了一个在Lua中没有预定义操作的raw内存区域。
+
+每次我们访问数组的时候，我们都要检查他是否有一个正确的metatable。
+因为Lua代码不能改变userdatum的metatable，所以他不会伪造我们的代码。
+
+* LUA常用函数
+** type函数，测试给定变量或者值的类型
+** 字符串处理函数 字符串与数值转换函数
+替换函数， string.gsub(a, "one", "another")
+字符串 数字间转换函数 tonumber tostring
+
+** io读写函数
+io.read
+io.write
+io.open打开文件？？
+** 遍历for循环函数pairs ipairs
+pairs能遍历所有的元素，ipairs只能遍历数组
+--for i in pairs(days) do
+-- print(days[i])
+--end 
+--for i,value in pairs(days) do
+-- print(value)
+--end
+ipairs使用key的顺序1、2、pairs使用表的自然存储顺序。
+** table表处理函数
+table.getn(<table variable name>)
+** string字符串处理函数
+前缀 后缀
+string.sub(s, 1, j)返回字符串s的长度为j的前缀；
+string.sub(s, j, -1)返回从第j个字符开始的后缀；
+string.char将数字转换成整数
+string.byte将字符串制定位置的字符转换成整数
+字符串部分替换string.gsub(目标串，模式串，替换串，替换次数)
+例如：计算空格出现次数 _, count = string.gsub(str, " ", " ")
+string.sub(s,i,j)函数截取字符串s的从第i个字符到第j个字符之间的串
+string.find(目标串，要查找串)
+例如：
+s = "Deadline is 30/05/1999, firm"
+date = "%d%d/%d%d/%d%d%d%d"
+print(string.sub(s, string.find(s, date))) --> 30/05/1999
+gsub进行子串替换
+s = " text}"
+print(s)
+s = string.gsub(s, "+){(.-)}", "<%1>%2</%1>")
+print(s)
+--> <command>some text</command>
+
+** 模式匹配
+*和-区别
+‘*’进行最长匹配
+test = "int x; int y; "
+print(string.gsub(test, "/%*.*%*/", "<COMMENT>"))
+--> int x; <COMMENT>
+‘-’进行最短匹配
+test = "int x; int y; "
+print(string.gsub(test, "/%*.-%*/", "<COMMENT>"))
+--> int x; <COMMENT> int y; <COMMENT>
+匹配位置定位 ^ $
+string.find(s, "^[+-]?%d+$") -- 检查字符串s是否以数字开头
+string.find(s, "^%d") -- 检查字符串s是否以数字开头
+'%b' 用来匹配对称的字符 常用的这种模式有：'%b()' ，'%b[]'，'%b%{%}' 和 '%b<>'
+** 模式捕获
+pair = "name = Anna"
+_, _, key, value = string.find(pair, "(%a+)%s*=%s*(%a+)")
+print(key, value) --> name Anna
+** require函数
+
+** 产生随机数
+math.random(0,1); 产生随机整数0~1
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -1,0 +1,46 @@
+软件安装、升级和清理
+
+* 软件包
+** 查看软件xxx安装内容
+   =dpkg -L xxx=
+** 查找软件库中的软件
+   =apt-cache search 正则表达式=
+   =aptitude search 软件包=
+** 显示系统安装包的统计信息
+   =apt-cache stats=
+** 显示系统全部可用包的名称
+   =apt-cache pkgnames=
+** 显示包的信息
+   =apt-cache show k3b=
+** 查询软件xxx依赖哪些包
+   =apt-cache depends xxx=
+* 系统更新和升级
+** 增加一个光盘源
+   =sudo apt-cdrom add=
+** 系统更新
+   =sudo apt-get update= (这一步更新包列表)
+   =sudo apt-get dist-upgrade= (这一步安装所有可用更新)
+   =sudo apt-get upgrade= (这一步安装应用程序更新，不安装新内核等)
+** 增加一个ppa源
+   =sudo add-apt-repository ppa:user/ppa-name= #使用 ppa 的地址替换 ppa:user/ppa-name
+** 系统升级
+   这里指的是版本间的升级，例如 9.04->10.04。 
+   使用该升级方式通常需要使用 backports 源。 
+   =sudo apt-get update=
+   =sudo apt-get install update-manager-core=
+   =sudo do-release-upgrade=
+* 备份与还原
+** 备份当前系统安装的所有包的列表
+   =dpkg --get-selections | grep -v deinstall > ~/somefile=
+** 从上面备份的安装包的列表文件恢复所有包
+   =dpkg --set-selections < ~/somefile=
+   =sudo dselect=
+* 软件包清理
+** 清除所有已删除包的残馀配置文件
+   =dpkg -l |grep ^rc|awk '{print $2}' |xargs dpkg -P=
+** 清理旧版本的软件缓存
+   =sudp apt-get autoclean=
+** 清理所有软件缓存
+   =sudo apt-get clean=
+** 删除系统不再使用的孤立软件
+   =sudo apt-get autoremove=
