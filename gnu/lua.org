@@ -1,35 +1,35 @@
-#+TITLE: Lua
-* Getting Started
-* Types and Values
-** Nil
-** Booleans
-** Numbers
-** Strings
-** Tables
+* Lua
+** Getting Started
+** Types and Values
+*** Nil
+*** Booleans
+*** Numbers
+*** Strings
+*** Tables
+*** Functions
+*** Userdata and Thread
+** Expressions
+*** Arithmetic Operators 
+*** Relational Operators
+*** Logical Operators
+*** Concatenation
+*** Precedence
+*** Table Constructors
+** Statements
+*** Assignment
+*** Local Variables and Blocks
+*** Control Structures
+**** if then else
+**** while
+**** repeat
+**** Numeric for
+**** Generic for
+*** break and return
 ** Functions
-** Userdata and Thread
-* Expressions
-** Arithmetic Operators 
-** Relational Operators
-** Logical Operators
-** Concatenation
-** Precedence
-** Table Constructors
-* Statements
-** Assignment
-** Local Variables and Blocks
-** Control Structures
-*** if then else
-*** while
-*** repeat
-*** Numeric for
-*** Generic for
-** break and return
-* Functions
-** Multiple Results
-** Variable Number of Arguments
-** Named Arguments
-* More about Functions
-** Closures
-** Non-Global Functions
-** Proper Tail Calls
+*** Multiple Results
+*** Variable Number of Arguments
+*** Named Arguments
+** More about Functions
+*** Closures
+*** Non-Global Functions
+*** Proper Tail Calls

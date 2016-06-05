@@ -1,25 +1,25 @@
-#+TITLE: Lua Notes
+* Lua Notes
 
-* LUA基本语法
-** 全局变量不需要声明
+** LUA基本语法
+*** 全局变量不需要声明
 =b = nil=
 删除一个全局变量 
 =print(b) --> nil=
 
-** 退出LUA的方法
+*** 退出LUA的方法
 =Ctrl-D= (linux) =Ctrl-Z= (DOS/Windows) 调用OS库的函数 =os.exit()=
 
-** 执行lua的chunk方法
+*** 执行lua的chunk方法
 执行一系列：lua -l<filename> -l<filename>
 在交互模式下调用dofile函数 >dofile("<filename>")
 
-** 注释
+*** 注释
 注意：Lua是大小写敏感的.
 注释：单行注释:--
 多行注释：--[[
           --]]
 
-** 条件判断
+*** 条件判断
 在控制结构的条件中除了false和nil为假，其他值都为真。所以Lua认为0和空串都是真。
 
 对于Table，Function和Userdata类型的数据，只有 == 和 ~=可以用。相等表示两个变量
@@ -33,10 +33,10 @@
   print(a==b, a~=b) -- false, true
 #+END_SRC
 
-** 连接运算符
+*** 连接运算符
 =print(10 .. 12) --> 1012=
 
-** 逻辑运算符
+*** 逻辑运算符
 逻辑运算符认为false和nil是假（false），其他为真，0也是true.
 and的优先级比or高。
 =a and b -- 如果a为false，则返回a，否则返回b=
@@ -47,14 +47,14 @@ C语言中的三元运算符
 =a ? b : c=
 =(a and b) or c=
 
-** 引用表中成员
+*** 引用表中成员
 #+BEGIN_SRC lua
   w = {x=0, y=0, label="console"}
   print(w.x) --> 0
   print(w["x"]) --> 
 #+END_SRC
 
-** 迭代器
+*** 迭代器
 #+BEGIN_SRC lua
   function list_iter (t)
      local i = 0
@@ -71,15 +71,15 @@ C语言中的三元运算符
   end
 #+END_SRC
 
-** for循环
-*** 第一种：数值循环
+*** for循环
+**** 第一种：数值循环
 for var=exp1,exp2,exp3 do
 loop-part
 end
 for将用exp3作为step从exp1（初始值）到exp2（终止值），执行loop-part。
 其中exp3可以省略，默认step=1
 
-*** 第二种：范性for
+**** 第二种：范性for
 for <var-list> in <exp-list> do
 <body>
 end
@@ -91,17 +91,17 @@ end
 将状态常量和控制变量作为参数调用迭代函数；
 迭代函数返回的值赋给变量列表。
 
-** 错误处理
+*** 错误处理
 error函数抛出异常
 assert调用抛出异常
 pcall函数调用
 
-** 协同程序
+*** 协同程序
 coroutine.create(<协同程序名，一般为匿名函数>)
 coroutine.resume(<create返回的协同程序名>,[传给协同程序的参数列表])
 resume函数的返回值除了true或false以外，还有yield的所有参数
 
-** __le和__lt __eq
+*** __le和__lt __eq
 一般实现__le后，还要实现__lt 和__eq
 #+BEGIN_SRC lua
   Set.mt.__lt = function (a,b)
@@ -112,7 +112,7 @@ resume函数的返回值除了true或false以外，还有yield的所有参数
   end
 #+END_SRC
 
-** 有默认值的表实现(所有表共享同一个metatable)
+*** 有默认值的表实现(所有表共享同一个metatable)
 #+BEGIN_SRC lua
   local key = {} -- unique key
   local mt = {__index = function(t) return t[key] end}
@@ -127,23 +127,23 @@ resume函数的返回值除了true或false以外，还有yield的所有参数
   print(tab.x, tab.z) --> 10 0
 #+END_SRC
 
-** 只读的表实现
+*** 只读的表实现
 每一个只读代理有一个单独的新的metatable，使用__index指向原始表
 
-** 监控表的实现
+*** 监控表的实现
 设置一个空表，这样就会总能触发__index和__newindex
 
-** LUA全局变量
+*** LUA全局变量
 枚举所有全局变量
 =for n in pairs(_G) do print(n) end=
 打印制定全局变量，例如：
 =print(_G["loadfile"])=
 
-** __index metamethod P108
+*** __index metamethod P108
 __index metamethod不需要非是一个函数，他也可以是一个表。
 但它是一个函数的时候，Lua将table和缺少的域作为参数调用这个函数；
 当他是一个表的时候，Lua将在这个表中看是否有缺少的域。
-** 包 module
+*** 包 module
 module 指令运行完后，整个环境被压栈，所以前面全局的东西再看不见了。
 local print=print
 module("test")
@@ -156,7 +156,7 @@ _G.print(...)
 module("test",package.seeall)
 print(...)
 
-** C API
+*** C API
 #define lua_open() luaL_newstate()
 lua_State *L = lua_open();
 lua_open();
@@ -297,9 +297,9 @@ C文件如下:
   print("The result is ",c);
 #+END_SRC
 
-** 字符串面值
+*** 字符串面值
 
-** 面向对象
+*** 面向对象
 1) 对象 类
 setmetatable(a, {__index = b})
 a相当于对象，b相当于类；对象a调用任何不存在的成员都会到对象b中查找
@@ -316,24 +316,24 @@ a相当于对象，b相当于类；对象a调用任何不存在的成员都会�
 
 导入C++中对象到lua中
 
-** userdata用途
+*** userdata用途
 在Lua中自定义类型，该类型由C函数操作。Lua为这种情况提供专门提供一个基本的类型：
 userdata。一个userdatum提供了一个在Lua中没有预定义操作的raw内存区域。
 
 每次我们访问数组的时候，我们都要检查他是否有一个正确的metatable。
 因为Lua代码不能改变userdatum的metatable，所以他不会伪造我们的代码。
 
-* LUA常用函数
-** type函数，测试给定变量或者值的类型
-** 字符串处理函数 字符串与数值转换函数
+** LUA常用函数
+*** type函数，测试给定变量或者值的类型
+*** 字符串处理函数 字符串与数值转换函数
 替换函数， string.gsub(a, "one", "another")
 字符串 数字间转换函数 tonumber tostring
 
-** io读写函数
+*** io读写函数
 io.read
 io.write
 io.open打开文件？？
-** 遍历for循环函数pairs ipairs
+*** 遍历for循环函数pairs ipairs
 pairs能遍历所有的元素，ipairs只能遍历数组
 --for i in pairs(days) do
 -- print(days[i])
@@ -342,9 +342,9 @@ pairs能遍历所有的元素，ipairs只能遍历数组
 -- print(value)
 --end
 ipairs使用key的顺序1、2、pairs使用表的自然存储顺序。
-** table表处理函数
+*** table表处理函数
 table.getn(<table variable name>)
-** string字符串处理函数
+*** string字符串处理函数
 前缀 后缀
 string.sub(s, 1, j)返回字符串s的长度为j的前缀；
 string.sub(s, j, -1)返回从第j个字符开始的后缀；
@@ -365,7 +365,7 @@ s = string.gsub(s, "+){(.-)}", "<%1>%2</%1>")
 print(s)
 --> <command>some text</command>
 
-** 模式匹配
+*** 模式匹配
 *和-区别
 ‘*’进行最长匹配
 test = "int x; int y; "
@@ -379,13 +379,13 @@ print(string.gsub(test, "/%*.-%*/", "<COMMENT>"))
 string.find(s, "^[+-]?%d+$") -- 检查字符串s是否以数字开头
 string.find(s, "^%d") -- 检查字符串s是否以数字开头
 '%b' 用来匹配对称的字符 常用的这种模式有：'%b()' ，'%b[]'，'%b%{%}' 和 '%b<>'
-** 模式捕获
+*** 模式捕获
 pair = "name = Anna"
 _, _, key, value = string.find(pair, "(%a+)%s*=%s*(%a+)")
 print(key, value) --> name Anna
-** require函数
+*** require函数
 
-** 产生随机数
+*** 产生随机数
 math.random(0,1); 产生随机整数0~1
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
